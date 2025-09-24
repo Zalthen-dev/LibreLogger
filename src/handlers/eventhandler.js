@@ -41,7 +41,7 @@ async function setupEvents(client) {
             if (!logChannel) return;
 
             const content = message.partial ? "[unknown content]" : message.content;
-            const authorName = message.author ? message.author.username : "[unknown author]"
+            const authorName = message.author ? message.tag : "[unknown author]"
             const authorId = message.author ? message.author.id : "nil"
 
             const embed = {
@@ -74,7 +74,7 @@ ${content}`
             const logChannel = await client.channels.fetch(guildData.logChannel);
             if (!logChannel) return;
             
-            const authorName = newMessage.author ? newMessage.author.username : "`[unknown author]`"
+            const authorName = newMessage.author ? newMessage.tag : "`[unknown author]`"
             const authorId = newMessage.author ? newMessage.author.id : "nil"
 
             const oldContent = oldMessage.partial ? "`[uncached content]`" : oldMessage.content
@@ -115,7 +115,7 @@ ${oldContent}
                 description: `
 > Member joined Server: <t:${member.joinedTimestamp}:R>
 > Member joined Discord: <t:${member.user.createdTimestamp}:R>
-> Member: ${member.user.username} (\`${member.user.id}\`)
+> Member: ${member.tag} (\`${member.user.id}\`)
 `
             };
 
@@ -137,13 +137,60 @@ ${oldContent}
                 description: `
 > Member left Server: <t:${Math.floor((Date.now() + 500) / 1000)}:R>
 > Member joined Discord: <t:${member.user.createdTimestamp}:R>
-> Member: ${member.user.username} (\`${member.user.id}\`)
+> Member: ${member.tag} (\`${member.user.id}\`)
 `
             };
 
             await logChannel.send({ embeds: [embed]});
         } catch (error) {
             console.error("❌ Failed to log member leaving:", error);
+        }
+    });
+
+    client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
+        try {
+            let guildData = await getGuild(newMessage.guildId);
+            const logChannel = await client.channels.fetch(guildData.logChannel);
+            if (!logChannel) return;
+
+            const oldTimeout = oldMember.communicationDisabledUntilTimestamp;
+            const newTimeout = newMember.communicationDisabledUntilTimestamp;
+
+            const logs = await newMember.guild.fetchAuditLogs({
+                    type: AuditLogEvent.MemberUpdate,
+                    limit: 1,
+                });
+
+            const entry = logs.entries.first();
+            let moderator = (entry && entry.target.id === newMember.id) ? entry.executor.tag : "[Unknown Moderator]"
+            let moderatorId = (entry && entry.target.id === newMember.id) ? `(${entry.executor.user.id})` : ""
+
+            let embed = null;
+            if (!oldTimeout && newTimeout) {
+                embed = {
+                    title: "Timeout Added",
+                    color: 0x2D74A6,
+                    description: `
+> Member: ${newMember.tag} (${newMember.user.id})
+> Member timed out until: <t:${newTimeout}:R>
+> Perpretrator: ${moderator} ${moderatorId}`
+                }
+            }
+
+            if (oldTimeout && !newTimeout) {
+                embed = {
+                    title: "Timeout Removed",
+                    color: 0x2D74A6,
+                    description: `
+> Member: ${newMember.tag} (${newMember.user.id})
+> Member timed out until: <t:${oldMember}:R>
+> Perpretrator: ${moderator} ${moderatorId}`
+                }
+            }
+
+            if (embed) await logChannel.send({ embeds: [embed]});
+        } catch (error) {
+            console.error("❌ Failed to log member change:", error);
         }
     });
 

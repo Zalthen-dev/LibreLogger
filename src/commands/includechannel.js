@@ -1,4 +1,4 @@
-const { ApplicationCommandOptionType, ChannelType } = require('discord.js');
+const { ApplicationCommandOptionType, ChannelType, PermissionsBitField } = require('discord.js');
 const { getGuild, setGuild } = require("../utils/guildStore.js");
 
 module.exports = {
@@ -16,6 +16,10 @@ module.exports = {
         //await interaction.reply({ content: "ℹ️ This command hasn't been implemented yet, annoy the developer into doing so", ephemeral: true });
 
         try {
+            if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
+                return interaction.reply({ content: "❌ You don't have sufficient permissions to use this command!", ephemeral: true });
+            }
+
             const guild = interaction.guild;
             if (!guild) {
                 console.warn("⚠️ Couldn't get guild from interaction!");

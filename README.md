@@ -21,6 +21,7 @@ LibreLogger requires two dependencies
 
 1. Create a Discord bot with the `Message Content Intent` intent enabled, and add to your server
 2. Clone repository `git clone https://github.com/Zalthen-dev/LibreLogger.git`
-4. Edit .env `nano .env` and add bot token & bot client ID
-6. Change ENVIORNMENT to `"production"`
-7. Run nodemon `nodemon`
+3. Rename .env.example to .env
+4. Edit .env and add bot token & bot client ID
+5. Change ENVIORNMENT to `"production"`
+6. Run nodemon `nodemon`

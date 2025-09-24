@@ -7,7 +7,7 @@
 LibreLogger is a Discord Bot that makes setting up logs easy to do, working out-of-the-box with the essentials, and being easy to expand with a simple codebase.
 
 ## Features
-- Lightweight, offline data storage
+- Minimal offline data storage
 - Commands to set log channel & include/exclude channels from logging
 - Command to view the list of channels excluded from logging
 - Commands to check bot ping & get server information

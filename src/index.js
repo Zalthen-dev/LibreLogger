@@ -14,14 +14,14 @@ const client = new Client({
 client.commands = new Collection();
 require("./handlers/commandhandler")(client);
 
-const flushInterval = Number(process.env.GUILD_CACHE_SAVE_INTERVAL) || 600
+const guildCacheSaveInterval = Number(process.env.GUILD_CACHE_SAVE_INTERVAL) || 600
 
 try {
     setInterval(async () => {
         console.log("💾 Saving guild cache to disk...")
         await guildStore.saveAll();
         console.log("💾 Successfully saved guild cache to disk!")
-    }, flushInterval * 1000) // every 10 minutes
+    }, guildCacheSaveInterval * 1000) // every 10 minutes
 
     console.log(`✅ Successfully set up guild cache save interval! The interval is ${process.env.GUILD_CACHE_SAVE_INTERVAL}s`)
 } catch (error) {

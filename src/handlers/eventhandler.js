@@ -3,13 +3,43 @@ const { Client, GatewayIntentBits, Collection, Events } = require("discord.js");
 const { getGuild, deleteGuild } = require("../utils/guildStore.js");
 
 async function setupEvents(client) {
+    client.once(Events.ClientReady, async (client) => {
+        try {
+            if (process.env.BOT_AUTOJOIN_THREADS.toLowerCase() == "true") {
+                const threads = client.channels.cache.filter(x => x.isThread());
+
+                for (const thread of threads.values()) {
+                    if (!thread.joined) {
+                        await thread.join().catch(() => {});
+                        console.log(`🧵 Joined thread: '#${thread.name}' in ${thread.guild.name}`);
+                    }
+                }
+            }
+
+            console.log(`✅ ${client.user.tag} is online`);
+        } catch (error) {
+            console.error("❌ Failed to follow threads:", error);
+        }
+    });
+
+    client.on(Events.ThreadCreate, async (thread) => {
+        try {
+            if (!thread.joined) {
+                await thread.join();
+                console.log(`🤖 Joined new thread: '#${thread.name}'`);
+            }
+        } catch (err) {
+            console.error(`❌ Couldn't join thread '${thread.name}':`, err);
+        }
+    });
+
     client.on("guildDelete", async (guild) => {
         try {
             console.log(`🗑️ Removed from guild: ${guild.name} (${guild.id}), cleaning up guild data...`);
             await deleteGuild(guild.id);
             console.log(`✅ Removed guild data from ${guild.name} (${guild.id})!`);
-        } catch (err) {
-            console.error("❌ Failed to clean up guild data:", err);
+        } catch (error) {
+            console.error("❌ Failed to clean up guild data:", error);
         }
     });
 
@@ -41,7 +71,7 @@ async function setupEvents(client) {
             if (!logChannel) return;
 
             const content = message.partial ? "[unknown content]" : message.content;
-            const authorName = message.author ? message.tag : "[unknown author]"
+            const authorName = message.author ? message.author.tag : "[unknown author]"
             const authorId = message.author ? message.author.id : "nil"
 
             const embed = {
@@ -74,7 +104,7 @@ ${content}`
             const logChannel = await client.channels.fetch(guildData.logChannel);
             if (!logChannel) return;
             
-            const authorName = newMessage.author ? newMessage.tag : "`[unknown author]`"
+            const authorName = newMessage.author ? newMessage.author.tag : "`[unknown author]`"
             const authorId = newMessage.author ? newMessage.author.id : "nil"
 
             const oldContent = oldMessage.partial ? "`[uncached content]`" : oldMessage.content
@@ -192,6 +222,7 @@ ${oldContent}
         } catch (error) {
             console.error("❌ Failed to log member change:", error);
         }
+        
     });
 
     console.log(`✅ Set up event handlers!`);

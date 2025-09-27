@@ -22,27 +22,6 @@ async function setupEvents(client) {
         }
     });
 
-    client.on(Events.ThreadCreate, async (thread) => {
-        try {
-            if (!thread.joined) {
-                await thread.join();
-                console.log(`🤖 Joined new thread: '#${thread.name}'`);
-            }
-        } catch (err) {
-            console.error(`❌ Couldn't join thread '${thread.name}':`, err);
-        }
-    });
-
-    client.on("guildDelete", async (guild) => {
-        try {
-            console.log(`🗑️ Removed from guild: ${guild.name} (${guild.id}), cleaning up guild data...`);
-            await deleteGuild(guild.id);
-            console.log(`✅ Removed guild data from ${guild.name} (${guild.id})!`);
-        } catch (error) {
-            console.error("❌ Failed to clean up guild data:", error);
-        }
-    });
-
     client.on(Events.InteractionCreate, async (interaction) => {
         if (!interaction.isChatInputCommand()) return;
 
@@ -59,6 +38,70 @@ async function setupEvents(client) {
                 await interaction.followUp(messageContent);
             else 
                 await interaction.reply(messageContent);
+        }
+    });
+
+    client.on("guildDelete", async (guild) => {
+        try {
+            console.log(`🗑️ Removed from guild: ${guild.name} (${guild.id}), cleaning up guild data...`);
+            await deleteGuild(guild.id);
+            console.log(`✅ Removed guild data from ${guild.name} (${guild.id})!`);
+        } catch (error) {
+            console.error("❌ Failed to clean up guild data:", error);
+        }
+    });
+
+    client.on(Events.ThreadCreate, async (thread) => {
+        try {
+            let guildData = await getGuild(thread.guildId);
+            const logChannel = await client.channels.fetch(guildData.logChannel);
+            if (logChannel) {
+                let startMessage = await thread.fetchStarterMessage();
+                const embed = {
+                    title: "Thread Created",
+                    color: 0x567890,
+                    description: `
+> Thread: ${thread.url}
+> Thread name: ${thread.name}
+> Thread creator: ${startMessage.member.tag} (${startMessage.member.id})
+> Thread created: <t:${Math.floor(thread.createdTimestamp / 1000)}:R>`
+                };
+
+                await logChannel.send({embeds: [embed], ephemeral: true})
+            }
+
+            if (!thread.joined) {
+                await thread.join();
+                console.log(`🤖 Joined new thread: '#${thread.name}'`);
+            }
+        } catch (error) {
+            console.error(`❌ Couldn't join thread '${thread.name}':`, error);
+        }
+    });
+
+    client.on(Events.ThreadDelete, async (thread) =>{
+        try {
+            let guildData = await getGuild(thread.guildId);
+            const logChannel = await client.channels.fetch(guildData.logChannel);
+            if (!logChannel) return;
+
+            let startMessage = await thread.fetchStarterMessage();
+            const embed = {
+                    title: "Thread Deleted",
+                    color: 0x906756,
+                    description: `
+> Thread ID: ${thread.id}
+> Thread name: ${thread.name}
+> Thread creator: ${startMessage.member.tag} (${startMessage.member.id})
+> Thread created: <t:${Math.floor(thread.createdTimestamp / 1000)}:R>
+> Thread members: ${thread.members.cache.size}
+> Thread messages: ${thread.messages.cache.size}
+`
+                };
+
+                await logChannel.send({embeds: [embed], ephemeral: true})
+        } catch (error) {
+            console.error(`❌ Couldn't log thread deletion '${thread.name}':`, error);
         }
     });
 

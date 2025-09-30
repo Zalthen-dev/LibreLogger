@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { Client, GatewayIntentBits, Collection, Events } = require("discord.js");
+const { Client, GatewayIntentBits, Collection, Events, AuditLogEvent } = require("discord.js");
 const { getGuild, deleteGuild } = require("../utils/guildStore.js");
 
 async function setupEvents(client) {
@@ -41,7 +41,7 @@ async function setupEvents(client) {
         }
     });
 
-    client.on("guildDelete", async (guild) => {
+    client.on(Events.GuildDelete, async (guild) => {
         try {
             console.log(`🗑️ Removed from guild: ${guild.name} (${guild.id}), cleaning up guild data...`);
             await deleteGuild(guild.id);
@@ -56,23 +56,25 @@ async function setupEvents(client) {
             let guildData = await getGuild(thread.guildId);
             const logChannel = await client.channels.fetch(guildData.logChannel);
             if (logChannel) {
-                let startMessage = await thread.fetchStarterMessage();
+                let creator = await thread.fetchOwner();
+                let creatorTag = creator ? creator.tag : `[Unknown Creator]`;
+
                 const embed = {
                     title: "Thread Created",
                     color: 0x567890,
                     description: `
 > Thread: ${thread.url}
 > Thread name: ${thread.name}
-> Thread creator: ${startMessage.member.tag} (${startMessage.member.id})
+> Thread creator: ${creatorTag} (${thread.ownerId})
 > Thread created: <t:${Math.floor(thread.createdTimestamp / 1000)}:R>`
                 };
 
-                await logChannel.send({embeds: [embed], ephemeral: true})
+                await logChannel.send({embeds: [embed], ephemeral: true});
             }
 
             if (!thread.joined) {
                 await thread.join();
-                console.log(`🤖 Joined new thread: '#${thread.name}'`);
+                console.log(`🧵 Joined new thread: '#${thread.name}'`);
             }
         } catch (error) {
             console.error(`❌ Couldn't join thread '${thread.name}':`, error);
@@ -178,7 +180,7 @@ ${oldContent}
 
     client.on(Events.GuildMemberAdd, async (member) => {
         try {
-            let guildData = await getGuild(newMessage.guildId);
+            let guildData = await getGuild(member.guild.id);
             const logChannel = await client.channels.fetch(guildData.logChannel);
             if (!logChannel) return;
 
@@ -187,7 +189,7 @@ ${oldContent}
                 color: 0x5AD662,
                 description: `
 > Member joined Server: <t:${member.joinedTimestamp}:R>
-> Member joined Discord: <t:${member.user.createdTimestamp}:R>
+> Member joined Discord: <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>
 > Member: ${member.tag} (\`${member.user.id}\`)
 `
             };
@@ -200,7 +202,7 @@ ${oldContent}
 
     client.on(Events.GuildMemberRemove, async (member) => {
         try {
-            let guildData = await getGuild(newMessage.guildId);
+            let guildData = await getGuild(member.guild.id);
             const logChannel = await client.channels.fetch(guildData.logChannel);
             if (!logChannel) return;
 
@@ -209,7 +211,7 @@ ${oldContent}
                 color: 0xFF2B2B,
                 description: `
 > Member left Server: <t:${Math.floor((Date.now() + 500) / 1000)}:R>
-> Member joined Discord: <t:${member.user.createdTimestamp}:R>
+> Member joined Discord: <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>
 > Member: ${member.tag} (\`${member.user.id}\`)
 `
             };
@@ -222,12 +224,16 @@ ${oldContent}
 
     client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
         try {
-            let guildData = await getGuild(newMessage.guildId);
+            let guildData = await getGuild(newMember.guild.id ?? oldMember.guild.id);
+            if (!guildData) return;
             const logChannel = await client.channels.fetch(guildData.logChannel);
             if (!logChannel) return;
 
             const oldTimeout = oldMember.communicationDisabledUntilTimestamp;
             const newTimeout = newMember.communicationDisabledUntilTimestamp;
+
+            const oldNick = oldMember.nickname;
+            const newNick = newMember.nickname;
 
             const logs = await newMember.guild.fetchAuditLogs({
                     type: AuditLogEvent.MemberUpdate,
@@ -236,7 +242,7 @@ ${oldContent}
 
             const entry = logs.entries.first();
             let moderator = (entry && entry.target.id === newMember.id) ? entry.executor.tag : "[Unknown Moderator]"
-            let moderatorId = (entry && entry.target.id === newMember.id) ? `(${entry.executor.user.id})` : ""
+            let moderatorId = (entry && entry.target.id === newMember.id) ? `(${entry.executor.id})` : ""
 
             let embed = null;
             if (!oldTimeout && newTimeout) {
@@ -244,7 +250,7 @@ ${oldContent}
                     title: "Timeout Added",
                     color: 0x2D74A6,
                     description: `
-> Member: ${newMember.tag} (${newMember.user.id})
+> Member: ${newMember.tag ?? oldMember.tag} (${newMember.user.id})
 > Member timed out until: <t:${newTimeout}:R>
 > Perpretrator: ${moderator} ${moderatorId}`
                 }
@@ -255,8 +261,20 @@ ${oldContent}
                     title: "Timeout Removed",
                     color: 0x2D74A6,
                     description: `
-> Member: ${newMember.tag} (${newMember.user.id})
+> Member: ${newMember.tag ?? oldMember.tag} (${newMember.user.id})
 > Member timed out until: <t:${oldMember}:R>
+> Perpretrator: ${moderator} ${moderatorId}`
+                }
+            }
+
+            if (oldNick != newNick) {
+                embed = {
+                    title: "User Nickname Changed",
+                    color: 0x2D74A6,
+                    description: `
+> Member: ${newMember.tag ?? oldMember.tag} (${newMember.user.id})
+> Nickname Before: \`${oldNick ?? "[Unknown Nickname]"}\`
+> Nickname After: \`${newNick ?? "[Unknown Nickname]"}\`
 > Perpretrator: ${moderator} ${moderatorId}`
                 }
             }

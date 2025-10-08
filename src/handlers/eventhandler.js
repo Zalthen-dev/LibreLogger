@@ -65,7 +65,7 @@ async function setupEvents(client) {
                     description: `
 > Thread: ${thread.url}
 > Thread name: ${thread.name}
-> Thread creator: ${creatorTag} (${thread.ownerId})
+> Thread creator: ${creatorTag} (\`${thread.ownerId}\`)
 > Thread created: <t:${Math.floor(thread.createdTimestamp / 1000)}:R>`
                 };
 
@@ -94,7 +94,7 @@ async function setupEvents(client) {
                     description: `
 > Thread ID: ${thread.id}
 > Thread name: ${thread.name}
-> Thread creator: ${startMessage.member.tag} (${startMessage.member.id})
+> Thread creator: ${startMessage.member.tag} (\`${startMessage.member.id}\`)
 > Thread created: <t:${Math.floor(thread.createdTimestamp / 1000)}:R>
 > Thread members: ${thread.members.cache.size}
 > Thread messages: ${thread.messages.cache.size}
@@ -125,7 +125,7 @@ async function setupEvents(client) {
                 description: `
 > Channel: ${message.channel.url}
 > Message ID: [${message.id}](${message.channel.url}/${message.id})
-> Message author: ${authorName} (${authorId})
+> Message author: ${authorName} (\`${authorId}\`)
 > Message deleted: <t:${Math.floor((Date.now() + 500) / 1000)}:R>
 
 **Content**
@@ -161,7 +161,7 @@ ${content}`
                 description: `
 > Channel: ${newMessage.channel.url}
 > Message ID: [${newMessage.id}](${newMessage.channel.url}/${newMessage.id})
-> Message author: ${authorName} (${authorId})
+> Message author: ${authorName} (\`${authorId}\`)
 > Message edited: <t:${Math.floor((Date.now() + 500) / 1000)}:R>
 
 **After**
@@ -188,9 +188,9 @@ ${oldContent}
                 title: "Member Joined",
                 color: 0x5AD662,
                 description: `
-> Member joined Server: <t:${member.joinedTimestamp}:R>
+> Member joined Server: <t:${Math.floor(member.joinedTimestamp / 1000)}:R>
 > Member joined Discord: <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>
-> Member: ${member.tag} (\`${member.user.id}\`)
+> Member: ${member.user.tag} (\`${member.user.id}\`)
 `
             };
 
@@ -212,7 +212,7 @@ ${oldContent}
                 description: `
 > Member left Server: <t:${Math.floor((Date.now() + 500) / 1000)}:R>
 > Member joined Discord: <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>
-> Member: ${member.tag} (\`${member.user.id}\`)
+> Member: ${member.user.tag} (\`${member.user.id}\`)
 `
             };
 
@@ -250,9 +250,9 @@ ${oldContent}
                     title: "Timeout Added",
                     color: 0x2D74A6,
                     description: `
-> Member: ${newMember.tag ?? oldMember.tag} (${newMember.user.id})
+> Member: ${newMember.user.tag ?? oldMember.user.tag} (\`${newMember.user.id}\`)
 > Member timed out until: <t:${newTimeout}:R>
-> Perpretrator: ${moderator} ${moderatorId}`
+> Perpretrator: ${moderator} (\`${moderatorId}\`)`
                 }
             }
 
@@ -261,9 +261,9 @@ ${oldContent}
                     title: "Timeout Removed",
                     color: 0x2D74A6,
                     description: `
-> Member: ${newMember.tag ?? oldMember.tag} (${newMember.user.id})
+> Member: ${newMember.user.tag ?? oldMember.user.tag} (\`${newMember.user.id}\`)
 > Member timed out until: <t:${oldMember}:R>
-> Perpretrator: ${moderator} ${moderatorId}`
+> Perpretrator: ${moderator} (\`${moderatorId}\`)`
                 }
             }
 
@@ -272,10 +272,10 @@ ${oldContent}
                     title: "User Nickname Changed",
                     color: 0x2D74A6,
                     description: `
-> Member: ${newMember.tag ?? oldMember.tag} (${newMember.user.id})
+> Member: ${newMember.user.tag ?? oldMember.user.tag} (\`${newMember.user.id}\`)
 > Nickname Before: \`${oldNick ?? "[Unknown Nickname]"}\`
 > Nickname After: \`${newNick ?? "[Unknown Nickname]"}\`
-> Perpretrator: ${moderator} ${moderatorId}`
+> Perpretrator: ${moderator} (\`${moderatorId}\`)`
                 }
             }
 

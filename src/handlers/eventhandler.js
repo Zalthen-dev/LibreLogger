@@ -251,7 +251,7 @@ ${oldContent}
                     color: 0x2D74A6,
                     description: `
 > Member: ${newMember.user.tag ?? oldMember.user.tag} (\`${newMember.user.id}\`)
-> Member timed out until: <t:${newTimeout}:R>
+> Member timed out until: <t:${Math.floor(newTimeout / 1000)}:R>
 > Perpretrator: ${moderator} (\`${moderatorId}\`)`
                 }
             }
@@ -262,7 +262,7 @@ ${oldContent}
                     color: 0x2D74A6,
                     description: `
 > Member: ${newMember.user.tag ?? oldMember.user.tag} (\`${newMember.user.id}\`)
-> Member timed out until: <t:${oldMember}:R>
+> Member timed out until: <t:${Math.floor(oldTimeout / 1000)}:R>
 > Perpretrator: ${moderator} (\`${moderatorId}\`)`
                 }
             }

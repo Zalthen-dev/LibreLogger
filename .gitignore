@@ -1,0 +1,5 @@
+data/guilds.json
+node_modules/
+.env
+
+package-lock.json

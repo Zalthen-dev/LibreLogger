@@ -20,10 +20,13 @@ LibreLogger requires two dependencies
 - discord.js 14.22.1 `npm install discord.js`
 - dotenv 16.0.3 `npm install dotenv`
 
-I recommend using nodemon to run the bot
+I recommend using `nodemon` to run the bot
 
-1. Create a Discord bot with the `Message Content Intent` and `Server Members Intent` intents enabled, and add to your server
-2. Clone repository `git clone https://github.com/Zalthen-dev/LibreLogger.git`
+1. Create a Discord bot with the **Message Content Intent** and **Server Members Intent** intents enabled, and add to your server
+2. Clone repository
+```bash
+git clone https://github.com/Zalthen-dev/LibreLogger.git
+```
 3. Rename `.env.example` to `.env`
 4. Edit `.env` and add bot token & bot client ID
 5. Change `ENVIORNMENT` to `"production"`

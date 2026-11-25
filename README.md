@@ -17,8 +17,8 @@ LibreLogger is a Discord Bot that makes setting up logs easy to do, working out-
 ## How to Setup
 
 LibreLogger requires two dependencies
-- discord.js 14.22.1 `npm install discord.js`
-- dotenv 16.0.3 `npm install dotenv`
+- discord.js 14.27.0 `npm install discord.js`
+- dotenv 16.6.1 `npm install dotenv`
 
 I recommend using `nodemon` to run the bot
 
